@@ -1,0 +1,3 @@
+#!/bin/bash
+
+scp -i $IMAGE/$RELEASE.id_rsa -P 10021 "$@" root@localhost:~/

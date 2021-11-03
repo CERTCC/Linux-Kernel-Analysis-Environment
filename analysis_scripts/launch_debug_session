@@ -1,0 +1,6 @@
+#!/bin/bash
+  
+tmux new-session -d -s kernel_debugging 'sleep 1 && cd $KERNEL && gdb vmlinux -ex "target remote :1234" -ex "c"; bash'
+tmux split-window -h 'sleep 3 && ssh_vm; cd && bash'
+tmux split-window -v 'cd && boot_vm --debug; tmux kill-session -t kernel_debugging'
+tmux attach -t kernel_debugging

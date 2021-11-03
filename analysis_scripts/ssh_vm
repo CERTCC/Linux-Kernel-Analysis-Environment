@@ -1,0 +1,2 @@
+#!/bin/bash
+ssh -o "StrictHostKeyChecking=no" -i $IMAGE/$RELEASE.id_rsa -p 10021 root@localhost

@@ -1,0 +1,84 @@
+#!/bin/bash
+
+
+KERNEL_VERSION=""
+KERNEL_CONFIG=""
+CONFIG_ONLY=""
+DEBUG=""
+
+display_help() {
+    echo "Usage: $0 [option...] " >&2
+    echo "When no options are passed, the latest kernel is built with a default config"
+    echo
+    echo "    --kernel-config  [CONFIG_FILE]    config file to build (will have some default features added)                         "
+    echo "    --kernel-version [VERSION]        kernel version to checkout and build                      "
+    echo "    --config-only                     Only make the .config file. Do not build the kernel (allows for modification after)"
+    echo "    -h, --help                        Display help message"
+    echo
+}
+
+while true; do
+    if [ $# -eq 0 ];then
+	echo $#
+	break
+    fi
+    case "$1" in
+        -h | --help)
+            display_help
+            exit 0
+            ;;
+        --kernel-config)
+            KERNEL_CONFIG=$2
+            shift 2
+            ;;
+        --kernel-version)
+            KERNEL_VERSION=$2
+            shift 2
+            ;;
+        --config-only)
+            CONFIG_ONLY="true"
+            shift 1
+            ;;
+        --debug)
+            DEBUG="true"
+            shift 1
+            ;;
+        -*)
+            echo "Error: Unknown option: $1" >&2
+            exit 1
+            ;;
+        *)  # No more options
+            break
+            ;;
+    esac
+done
+
+
+cd $KERNEL
+if [ ! -f ".MYCONFIG" ]; then
+    git pull
+    git checkout $KERNEL_VERSION
+
+    if [ ! -z "$KERNEL_CONFIG" ]
+    then
+        cp $KERNEL_CONFIG .config
+    else
+        make defconfig
+        #echo -ne "CONFIG_FRAME_POINTER=y\nCONFIG_KGDB=y\nCONFIG_KGDB_SERIAL_CONSOLE=y" >> ./config
+    fi
+
+    if [ ! -z "$DEBUG" ]; then
+        cat $KCONF_FRAGS/debug_options.kconf >> ./.config
+    fi
+
+    cat $KCONF_FRAGS/fileshare_options.kconf >> ./.config
+    cat $KCONF_FRAGS/other_options.kconf >> ./.config
+
+    touch .MYCONFIG
+fi
+
+if [ -z "$CONFIG_ONLY" ]; then
+    rm .MYCONFIG
+    make -j8
+    make headers_install INSTALL_HDR_PATH=$KERNEL/usr/
+fi

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+DIR=$RELEASE
+mkdir /mnt/$RELEASE
+sudo mount -o loop $IMAGE/$RELEASE.img /mnt/$DIR
+
+sed -i '/^kernelbuild/d' /mnt/$DIR/etc/fstab
+
+KERNELRELEASE=$(cat $KERNEL/include/config/kernel.release)
+echo "kernelbuild /lib/modules/$KERNELRELEASE/build 9p defaults 0 0" | sudo tee -a /mnt/$DIR/etc/fstab
+
+
+sudo umount /mnt/$DIR
+rmdir /mnt/$RELEASE
